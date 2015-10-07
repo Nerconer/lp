@@ -21,25 +21,29 @@
 #define ROBOT 11
 #define WALLS 12
 #define BEEPERS 13
-#define COMMA 14
-#define SEMICOLON 15
-#define DEFINE 16
-#define TURNOFF 17
-#define IF 18
-#define AND 19
-#define OR 20
-#define NOT 21
-#define MOVE 22
-#define TURNLEFT 23
-#define PUTBEEPER 24
-#define PICKBEEPER 25
-#define ISCLEAR 26
-#define FOUNDBEEPER 27
-#define ANYBEEPERSINBAG 28
-#define ITERATE 29
-#define BEGIN 30
-#define END 31
-#define ID 32
+#define LEFT 14
+#define RIGHT 15
+#define UP 16
+#define DOWN 17
+#define COMMA 18
+#define SEMICOLON 19
+#define DEFINE 20
+#define TURNOFF 21
+#define IF 22
+#define AND 23
+#define OR 24
+#define NOT 25
+#define MOVE 26
+#define TURNLEFT 27
+#define PUTBEEPER 28
+#define PICKBEEPER 29
+#define ISCLEAR 30
+#define FOUNDBEEPER 31
+#define ANYBEEPERSINBAG 32
+#define ITERATE 33
+#define BEGIN 34
+#define END 35
+#define ID 36
 
 #ifdef __USE_PROTOS
 void karel(AST**_root);
@@ -57,6 +61,12 @@ extern void dworld();
 void drobot(AST**_root);
 #else
 extern void drobot();
+#endif
+
+#ifdef __USE_PROTOS
+void dir(AST**_root);
+#else
+extern void dir();
 #endif
 
 #ifdef __USE_PROTOS
@@ -124,7 +134,8 @@ extern SetWordType zzerr1[];
 extern SetWordType zzerr2[];
 extern SetWordType zzerr3[];
 extern SetWordType zzerr4[];
-extern SetWordType setwd1[];
 extern SetWordType zzerr5[];
+extern SetWordType setwd1[];
+extern SetWordType zzerr6[];
 extern SetWordType setwd2[];
 extern SetWordType setwd3[];

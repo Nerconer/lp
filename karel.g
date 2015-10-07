@@ -168,25 +168,94 @@ bool isClear(int x, int y, int orient) {
   // ompliu el codi que falta aqui    
 }
 
+void obtenirDir() {
+  string dir;
+  dir = root->down->right->down->right->right->right->kind.c_str();
+  if ( dir == "left" )
+    domini.orient = DLEFT;
+  if ( dir == "right" )
+    domini.orient = DRIGHT;
+  if ( dir == "up" ) 
+    domini.orient = DUP;
+  if ( dir == "down" )
+    domini.orient = DDOWN;   
+}
+
+int mirarDir(AST *a) {
+  if( a->kind == "left" )
+    return 0;
+  else if( a->kind == "right" )
+    return 1;
+  else if( a->kind == "up" )
+    return 2;
+  else // down
+    return 3;
+}
+
+void detectaWallsBeepers() {
+  AST *llista = root->down->right->right->down;
+  while ( llista != NULL ) {
+    if(llista->kind == "walls") {
+      AST *walls = llista->down;
+      while( walls != NULL) {
+	int dir = mirarDir(walls->right->right);
+	// afageix un nou mur i avanca al seguent
+	domini.walls.push_back(i3tuple(atoi(walls->kind.c_str()),atoi(walls->right->kind.c_str()), dir));
+	walls = walls->right->right->right;
+      }
+    }
+    if(llista->kind == "beepers") {
+      AST *beepers = llista->down;
+      domini.beepers.push_back(i3tuple(atoi(beepers->kind.c_str()), atoi(beepers->right->kind.c_str()), atoi(beepers->right->right->kind.c_str())));
+    }
+    llista = llista->right;
+  }
+}
+
 void omplirDomini() { 
    domini.gx = atoi(root->down->down->kind.c_str());
    domini.gy = atoi(root->down->down->right->kind.c_str());
    domini.posx = atoi(root->down->right->down->kind.c_str());
    domini.posy = atoi(root->down->right->down->right->kind.c_str()); 
    // ompliu el codi que falta aqui  
+   domini.nsens = atoi(root->down->right->down->right->right->kind.c_str());
+   obtenirDir();
 }
 
 void novaPosicio () {
    omplirDomini();
-  // ompliu el codi que falta aqui  
+  // ompliu el codi que falta aqui
+  detectaWallsBeepers();
 }
 
+void printWallsBeepers(vector<i3tuple> v) {
+  for (const auto&i : v) {
+    cout << "[" << get<0>(i)  << " " << get<1>(i) << " " << get<2>(i) << "]" <<endl;
+  }
+}
+
+void printValors() {
+  cout << "domini X: " << domini.gx << endl;
+  cout << "domini Y: " << domini.gy << endl;
+  
+  cout << "pos actual robot (x,y): (" << domini.posx << ", " << domini.posy << ")" << endl;
+  
+  cout << "num sensors (total): " << domini.nsens << endl;
+  cout << "orientacio: " << domini.orient << " (0->left, 1->right, 2->up, 3->down)" << endl;
+  
+  cout << "num walls: " << domini.walls.size() << endl;
+  printWallsBeepers(domini.walls);
+  
+  cout << "num beepers: " << domini.beepers.size() << endl;
+  printWallsBeepers(domini.beepers);
+}
 
 int main() {
   root = NULL;
   ANTLR(karel(&root), stdin);
   ASTPrint(root);
-  novaPosicio(); 
+  novaPosicio();
+  printValors();
 }
 >>
 
@@ -204,10 +273,10 @@ int main() {
 #token ROBOT "robot"
 #token WALLS "walls"
 #token BEEPERS "beepers"
-//#token LEFT "left"
-//#token RIGHT "right"
-//#token UP "up"
-//#token DOWN "down"
+#token LEFT "left"
+#token RIGHT "right"
+#token UP "up"
+#token DOWN "down"
 #token COMMA "\,"
 #token SEMICOLON "\;"
 
@@ -248,9 +317,9 @@ karel: dworld drobot definitions BEGIN! iter1 END! <<#0=createASTlist(_sibling);
 
 dworld: WORLD^ NUM NUM;
 
-drobot: ROBOT^ NUM NUM NUM ID;
+drobot: ROBOT^ NUM NUM NUM dir;
 
-
+dir: LEFT | RIGHT | UP | DOWN;
 
 rIf: IF^ cond LKEY! instr RKEY!;
 
@@ -268,7 +337,7 @@ iter2: ITERATE^ NUM LKEY! instr RKEY!;
 iter1: iter2 (ID SEMICOLON!)* TURNOFF SEMICOLON! <<#0=createASTlist(_sibling);>>;
 
 
-defsWallsBeepers: WALLS^ LBRA! NUM NUM ID (COMMA! NUM NUM ID)* RBRA! | BEEPERS^ NUM NUM NUM;
+defsWallsBeepers: WALLS^ LBRA! NUM NUM dir (COMMA! NUM NUM dir)* RBRA! | BEEPERS^ NUM NUM NUM;
 
 definitions: (defsWallsBeepers | functions)* <<#0=createASTlist(_sibling);>>;
 

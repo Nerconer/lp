@@ -126,6 +126,26 @@ beepers
 		NLA = BEEPERS;
 	>>
 
+left
+	<<
+		NLA = LEFT;
+	>>
+
+right
+	<<
+		NLA = RIGHT;
+	>>
+
+up
+	<<
+		NLA = UP;
+	>>
+
+down
+	<<
+		NLA = DOWN;
+	>>
+
 \,
 	<<
 		NLA = COMMA;

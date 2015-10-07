@@ -200,25 +200,93 @@ bool isClear(int x, int y, int orient) {
   // ompliu el codi que falta aqui    
 }
 
+void obtenirDir() {
+  string dir;
+  dir = root->down->right->down->right->right->right->kind.c_str();
+  if ( dir == "left" )
+  domini.orient = DLEFT;
+  if ( dir == "right" )
+  domini.orient = DRIGHT;
+  if ( dir == "up" ) 
+  domini.orient = DUP;
+  if ( dir == "down" )
+  domini.orient = DDOWN;   
+}
+
+int mirarDir(AST *a) {
+  if( a->kind == "left" )
+  return 0;
+  else if( a->kind == "right" )
+  return 1;
+  else if( a->kind == "up" )
+  return 2;
+  else // down
+  return 3;
+}
+
+void detectaWallsBeepers() {
+  AST *llista = root->down->right->right->down;
+  while ( llista != NULL ) {
+    if(llista->kind == "walls") {
+      AST *walls = llista->down;
+      while( walls != NULL) {
+        int dir = mirarDir(walls->right->right);
+        // afageix un nou mur i avanca al seguent
+        domini.walls.push_back(i3tuple(atoi(walls->kind.c_str()),atoi(walls->right->kind.c_str()), dir));
+        walls = walls->right->right->right;
+      }
+    }
+    if(llista->kind == "beepers") {
+      AST *beepers = llista->down;
+      domini.beepers.push_back(i3tuple(atoi(beepers->kind.c_str()), atoi(beepers->right->kind.c_str()), atoi(beepers->right->right->kind.c_str())));
+    }
+    llista = llista->right;
+  }
+}
+
 void omplirDomini() { 
   domini.gx = atoi(root->down->down->kind.c_str());
   domini.gy = atoi(root->down->down->right->kind.c_str());
   domini.posx = atoi(root->down->right->down->kind.c_str());
   domini.posy = atoi(root->down->right->down->right->kind.c_str()); 
   // ompliu el codi que falta aqui  
+  domini.nsens = atoi(root->down->right->down->right->right->kind.c_str());
+  obtenirDir();
 }
 
 void novaPosicio () {
   omplirDomini();
-  // ompliu el codi que falta aqui  
+  // ompliu el codi que falta aqui
+  detectaWallsBeepers();
 }
 
+void printWallsBeepers(vector<i3tuple> v) {
+  for (const auto&i : v) {
+    cout << "[" << get<0>(i)  << " " << get<1>(i) << " " << get<2>(i) << "]" <<endl;
+  }
+}
+
+void printValors() {
+  cout << "domini X: " << domini.gx << endl;
+  cout << "domini Y: " << domini.gy << endl;
+  cout << "pos actual robot (x,y): (" << domini.posx << ", " << domini.posy << ")" << endl;
+  cout << "num sensors: " << domini.nsens << endl;
+  cout << "orientacio: " << domini.orient << " (0->left, 1->right, 2->up, 3->down)" << endl;
+  
+  cout << "num walls: " << domini.walls.size() << endl;
+  printWallsBeepers(domini.walls);
+  
+  cout << "num beepers: " << domini.beepers.size() << endl;
+  printWallsBeepers(domini.beepers);
+  
+}
 
 int main() {
   root = NULL;
   ANTLR(karel(&root), stdin);
   ASTPrint(root);
-  novaPosicio(); 
+  novaPosicio();
+  printValors();
 }
 
 void
@@ -291,13 +359,53 @@ AST **_root;
   zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
   zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
   zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
-  zzmatch(ID); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+  dir(zzSTR); zzlink(_root, &_sibling, &_tail);
   zzEXIT(zztasp1);
   return;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
   zzresynch(setwd1, 0x4);
+  }
+}
+
+void
+#ifdef __USE_PROTOS
+dir(AST**_root)
+#else
+dir(_root)
+AST **_root;
+#endif
+{
+  zzRULE;
+  zzBLOCK(zztasp1);
+  zzMake0;
+  {
+  if ( (LA(1)==LEFT) ) {
+    zzmatch(LEFT); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+  }
+  else {
+    if ( (LA(1)==RIGHT) ) {
+      zzmatch(RIGHT); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+    }
+    else {
+      if ( (LA(1)==UP) ) {
+        zzmatch(UP); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+      }
+      else {
+        if ( (LA(1)==DOWN) ) {
+          zzmatch(DOWN); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+        }
+        else {zzFAIL(1,zzerr1,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
+      }
+    }
+  }
+  zzEXIT(zztasp1);
+  return;
+fail:
+  zzEXIT(zztasp1);
+  zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
+  zzresynch(setwd1, 0x8);
   }
 }
 
@@ -323,7 +431,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd1, 0x8);
+  zzresynch(setwd1, 0x10);
   }
 }
 
@@ -369,7 +477,7 @@ AST **_root;
           if ( (LA(1)==ANYBEEPERSINBAG) ) {
             zzmatch(ANYBEEPERSINBAG); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
           }
-          else {zzFAIL(1,zzerr1,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
+          else {zzFAIL(1,zzerr2,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
         }
       }
       zzEXIT(zztasp3);
@@ -382,7 +490,7 @@ AST **_root;
     zzBLOCK(zztasp2);
     zzMake0;
     {
-    while ( (setwd1[LA(1)]&0x10) ) {
+    while ( (setwd1[LA(1)]&0x20) ) {
       {
         zzBLOCK(zztasp3);
         zzMake0;
@@ -398,7 +506,7 @@ AST **_root;
             if ( (LA(1)==NOT) ) {
               zzmatch(NOT); zzsubroot(_root, &_sibling, &_tail); zzCONSUME;
             }
-            else {zzFAIL(1,zzerr2,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
+            else {zzFAIL(1,zzerr3,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
           }
         }
         zzEXIT(zztasp3);
@@ -419,7 +527,7 @@ AST **_root;
             if ( (LA(1)==ANYBEEPERSINBAG) ) {
               zzmatch(ANYBEEPERSINBAG); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
             }
-            else {zzFAIL(1,zzerr3,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
+            else {zzFAIL(1,zzerr4,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
           }
         }
         zzEXIT(zztasp3);
@@ -435,7 +543,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd1, 0x20);
+  zzresynch(setwd1, 0x40);
   }
 }
 
@@ -474,7 +582,7 @@ AST **_root;
             if ( (LA(1)==ID) ) {
               zzmatch(ID); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
             }
-            else {zzFAIL(1,zzerr4,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
+            else {zzFAIL(1,zzerr5,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
           }
         }
       }
@@ -488,7 +596,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd1, 0x40);
+  zzresynch(setwd1, 0x80);
   }
 }
 
@@ -509,12 +617,12 @@ AST **_root;
     zzMake0;
     {
     for (;;) {
-      if ( !((setwd1[LA(1)]&0x80))) break;
+      if ( !((setwd2[LA(1)]&0x1))) break;
       if ( (LA(1)==IF) ) {
         rIf(zzSTR); zzlink(_root, &_sibling, &_tail);
       }
       else {
-        if ( (setwd2[LA(1)]&0x1) ) {
+        if ( (setwd2[LA(1)]&0x2) ) {
           rinst(zzSTR); zzlink(_root, &_sibling, &_tail);
         }
         else break; /* MR6 code for exiting loop "for sure" */
@@ -530,7 +638,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd2, 0x2);
+  zzresynch(setwd2, 0x4);
   }
 }
 
@@ -556,7 +664,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd2, 0x4);
+  zzresynch(setwd2, 0x8);
   }
 }
 
@@ -582,7 +690,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd2, 0x8);
+  zzresynch(setwd2, 0x10);
   }
 }
 
@@ -621,7 +729,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd2, 0x10);
+  zzresynch(setwd2, 0x20);
   }
 }
 
@@ -642,7 +750,7 @@ AST **_root;
     zzmatch(LBRA);  zzCONSUME;
     zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
     zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
-    zzmatch(ID); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+    dir(zzSTR); zzlink(_root, &_sibling, &_tail);
     {
       zzBLOCK(zztasp2);
       zzMake0;
@@ -651,7 +759,7 @@ AST **_root;
         zzmatch(COMMA);  zzCONSUME;
         zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
         zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
-        zzmatch(ID); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
+        dir(zzSTR); zzlink(_root, &_sibling, &_tail);
         zzLOOP(zztasp2);
       }
       zzEXIT(zztasp2);
@@ -666,14 +774,14 @@ AST **_root;
       zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
       zzmatch(NUM); zzsubchild(_root, &_sibling, &_tail); zzCONSUME;
     }
-    else {zzFAIL(1,zzerr5,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
+    else {zzFAIL(1,zzerr6,&zzMissSet,&zzMissText,&zzBadTok,&zzBadText,&zzErrk); goto fail;}
   }
   zzEXIT(zztasp1);
   return;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd2, 0x20);
+  zzresynch(setwd2, 0x40);
   }
 }
 
@@ -694,8 +802,8 @@ AST **_root;
     zzMake0;
     {
     for (;;) {
-      if ( !((setwd2[LA(1)]&0x40))) break;
-      if ( (setwd2[LA(1)]&0x80) ) {
+      if ( !((setwd2[LA(1)]&0x80))) break;
+      if ( (setwd3[LA(1)]&0x1) ) {
         defsWallsBeepers(zzSTR); zzlink(_root, &_sibling, &_tail);
       }
       else {
@@ -715,7 +823,7 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd3, 0x1);
+  zzresynch(setwd3, 0x2);
   }
 }
 
@@ -736,6 +844,6 @@ AST **_root;
 fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd3, 0x2);
+  zzresynch(setwd3, 0x4);
   }
 }

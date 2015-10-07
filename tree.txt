@@ -1,0 +1,62 @@
+list
+  \__world
+  |       \__5
+  |       \__5
+  \__robot
+  |       \__2
+  |       \__3
+  |       \__5
+  |       \__right
+  \__list
+  |      \__walls
+  |      |       \__2
+  |      |       \__2
+  |      |       \__left
+  |      |       \__1
+  |      |       \__2
+  |      |       \__up
+  |      \__beepers
+  |      |         \__1
+  |      |         \__3
+  |      |         \__2
+  |      \__walls
+  |      |       \__1
+  |      |       \__2
+  |      |       \__down
+  |      \__beepers
+  |      |         \__4
+  |      |         \__4
+  |      |         \__1
+  |      \__define
+  |      |        \__id(turnright)
+  |      |        \__list
+  |      |               \__turnleft
+  |      |               \__turnleft
+  |      |               \__turnleft
+  |      \__define
+  |               \__id(t1)
+  |               \__list
+  |                      \__id(turnright)
+  |                      \__if
+  |                           \__and
+  |                           |     \__isClear
+  |                           |     \__anyBeepersInBag
+  |                           \__list
+  |                                  \__move
+  |                                  \__putbeeper
+  \__list
+         \__iterate
+         |         \__3
+         |         \__list
+         |                \__if
+         |                |    \__foundBeeper
+         |                |    \__list
+         |                |           \__pickbeeper
+         |                \__if
+         |                     \__not
+         |                     |     \__foundBeeper
+         |                     \__list
+         |                            \__move
+         |                            \__id(turnright)
+         \__id(t1)
+         \__turnoff
