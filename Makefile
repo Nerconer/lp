@@ -13,3 +13,9 @@ dlg:
 	$(CC3) -ci parser.dlg scan.c
 karel: karel.c scan.c err.c
 	$(CC) -o karel karel.c scan.c err.c $(FLAGS)
+
+1: antlr1 dlg karel
+
+antlr1: karel.g
+	antlr -gt karel.g
+

@@ -6,7 +6,7 @@
  * With AHPCRC, University of Minnesota
  * ANTLR Version 1.33MR33
  *
- *   antlr27 -gt karel.g
+ *   antlr -gt karel.g
  *
  */
 
