@@ -267,18 +267,23 @@ void printWallsBeepers(vector<i3tuple> v) {
 }
 
 void printValors() {
+  cout << endl;
   cout << "domini X: " << domini.gx << endl;
   cout << "domini Y: " << domini.gy << endl;
+  
+  cout << endl;
   cout << "pos actual robot (x,y): (" << domini.posx << ", " << domini.posy << ")" << endl;
-  cout << "num sensors: " << domini.nsens << endl;
+  
+  cout << "num sensors (total): " << domini.nsens << endl;
   cout << "orientacio: " << domini.orient << " (0->left, 1->right, 2->up, 3->down)" << endl;
   
+  cout << endl;
   cout << "num walls: " << domini.walls.size() << endl;
   printWallsBeepers(domini.walls);
   
+  cout << endl;
   cout << "num beepers: " << domini.beepers.size() << endl;
   printWallsBeepers(domini.beepers);
-  
 }
 
 int main() {
