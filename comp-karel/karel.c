@@ -193,11 +193,69 @@ bool avaluaCondicio(AST *a) {
 }
 
 bool dinsDominis(int x, int y) {
-  return (x <= domini.gx and y <= domini.gy);
+  return (x < domini.gx and y < domini.gy and x >= 0 and y >= 0);
+}
+
+bool isWall(int x, int y) {
+  cout << "posicio a mirar: (" << x << ", "<< y << ")" << endl;
+  for (const auto&i : domini.walls) {
+    int x1, y1, ori;
+    x1 = get<0>(i); y1 = get<1>(i); ori = get<2>(i);
+    if( ori == 0 ) {	// DLEFT
+      for(int j = 0; dinsDominis(x1,y1); j++) {
+        cout << " DLEFT x1: " << x1 << " " << "y1: "<<y1 << endl;
+        if(x == x1 && y == y1)
+        return true;
+        --y1;
+      }
+    }
+    else if( ori == 1 ) {	// DRIGHT
+      for(int j = 0; dinsDominis(x1,y1); j++) {
+        cout << " DRIGHT x1: " << x1 << " " << "y1: "<<y1 << endl;
+        if(x == x1 && y == y1)
+        return true;
+        ++y1;
+      }
+    }
+    else if( ori == 2 ) {	// DUP
+      for(int j = 0; dinsDominis(x1,y1); j++) {
+        cout << " DUP x1: " << x1 << " " << "y1: "<<y1 << endl;
+        if(x == x1 && y == y1)
+        return true;
+        --x1;
+      }
+    }
+    else {	// DDOWN
+      for(int j = 0; dinsDominis(x1,y1); j++) {
+        cout << " DOWN x1: " << x1 << " " << "y1: "<<y1 << endl;
+        if(x == x1 && y == y1)
+        return true;
+        ++x1;
+      }
+    }
+  }
+  return false;
 }
 
 bool isClear(int x, int y, int orient) {
-  // ompliu el codi que falta aqui    
+  // ompliu el codi que falta aqui
+  if ( orient == DLEFT ) {
+    if (dinsDominis(x,y-1) && !isWall(x,y-1))
+    return true;
+  }
+  else if( orient == DRIGHT ) {
+    if (dinsDominis(x,y+1) && !isWall(x,y+1))
+    return true;
+  }
+  else if( orient == DUP ) {
+    if (dinsDominis(x-1,y) && !isWall(x-1,y))
+    return true;
+  }
+  else {	// DDOWN
+    if (dinsDominis(x+1,y) && !isWall(x+1,y))
+    return true;
+  }
+  return false;
 }
 
 void obtenirDir() {
@@ -254,10 +312,20 @@ void omplirDomini() {
   obtenirDir();
 }
 
+void testWalls() {
+  int x,y,ori;
+  x = 0;
+  y = 0;
+  ori = 3;
+  cout << "isClear("<< x <<", "<< y <<", "<< ori << ") "<< isClear(x,y,ori) << endl;
+}
+
 void novaPosicio () {
   omplirDomini();
   // ompliu el codi que falta aqui
   detectaWallsBeepers();
+  
+
 }
 
 void printWallsBeepers(vector<i3tuple> v) {
@@ -292,6 +360,7 @@ int main() {
   ASTPrint(root);
   novaPosicio();
   printValors();
+  testWalls();	// TREURE
 }
 
 void
