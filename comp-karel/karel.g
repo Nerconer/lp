@@ -42,6 +42,17 @@ struct {
   vector<i3tuple>  walls, beepers;   
 }domini;
 
+const string nomDirs[4] = {"DLEFT","DRIGHT","DUP","DDOWN"};
+
+void printWallsBeepers(vector<i3tuple> v);
+void printValors();
+bool isClear();
+bool foundBeeper();
+bool anyBeepersInBag();
+void move();
+
+
+
 // function to fill token information
 void zzcr_attr(Attrib *attr, int type, char *text) {
   if (type == ID) {
@@ -62,6 +73,9 @@ void zzcr_attr(Attrib *attr, int type, char *text) {
   }
   else if (type == DEFINE) {
     attr->kind = "define";
+  }
+  else if (type == IF) {
+    attr->kind = "if";
   }
   else {
     attr->kind = text;
@@ -150,13 +164,14 @@ void ASTPrint(AST *a)
   }
 }
 
-
-
 bool avaluaCondicio(AST *a) {
   if (a->kind == "not") return not(avaluaCondicio(child(a,0)));
   else if (a->kind == "and") return avaluaCondicio(child(a,0)) and avaluaCondicio(child(a,1));
   else if (a->kind == "or") return avaluaCondicio(child(a,0)) or avaluaCondicio(child(a,1));
+  
   // ompliu el codi que falta aqui
+  else if(a->kind == "foundBeeper") return foundBeeper();
+  else if(a->kind == "isClear") return isClear();
  
 }
 
@@ -165,7 +180,6 @@ bool dinsDominis(int x, int y) {
 }
 
 bool isWall(int x, int y) {
-cout << "posicio a mirar: (" << x << ", "<< y << ")" << endl;
   for (const auto&i : domini.walls) {
     int x1, y1, ori;
     x1 = get<0>(i); y1 = get<1>(i); ori = get<2>(i);
@@ -201,7 +215,20 @@ cout << "posicio a mirar: (" << x << ", "<< y << ")" << endl;
   return false;
 }
 
-bool isClear(int x, int y, int orient) {
+// Retorna cert si queda algun sensor
+bool anyBeepersInBag() {
+  int numB = 0;	// Numero de sensors al mapa
+  for (const auto&i : domini.beepers) {
+    numB += get<2>(i);
+  }
+  return (domini.nsens-numB);
+}
+
+// Mira a la casella del costat de la posicio (x,y) en la direccio orient
+bool isClear() {
+  int x = domini.posx;
+  int y = domini.posy;
+  int orient = domini.orient;
   // ompliu el codi que falta aqui
   if ( orient == DLEFT ) {
     if (dinsDominis(x,y-1) && !isWall(x,y-1))
@@ -220,6 +247,57 @@ bool isClear(int x, int y, int orient) {
       return true;
   }
   return false;
+}
+
+// Indica si hi ha algun sensor a la cel·la
+bool foundBeeper() {
+  for (const auto&i : domini.beepers) {
+    int x1, y1, num;
+    x1 = get<0>(i); y1 = get<1>(i); num = get<2>(i);
+    if( domini.posx == x1 and domini.posy == y1 and num > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void pickbeeper() {
+  for (auto&i : domini.beepers) {
+    int x1, y1, num;
+    x1 = get<0>(i); y1 = get<1>(i); num = get<2>(i);
+    if( domini.posx == x1 and y1 == y1 and num > 0)
+      get<2>(i)--;
+  }
+}
+
+void move(){
+  bool possible = true;
+  if(domini.orient == DLEFT) {
+    if(dinsDominis(domini.posx, domini.posy-1)) domini.posy--;
+    else possible = false;
+  }
+  else if(domini.orient == DRIGHT) {
+    if(dinsDominis(domini.posx, domini.posy+1)) domini.posy++;
+    else possible = false;
+  }
+  else if(domini.orient == DUP) {
+    if(dinsDominis(domini.posx-1, domini.posy)) domini.posx--;
+    else possible = false;
+  }
+  else if(domini.orient == DDOWN) {
+    if(dinsDominis(domini.posx+1, domini.posy)) domini.posx++;
+    else possible = false;
+  }
+  
+  cout << "================================================================================" << endl;
+  if(possible) {
+    cout << "M'he mogut...posicio actual: (" << domini.posx << ", " << domini.posy << ")" << endl;
+  }
+  else {
+    cout << "No m'he pogut moure :(" << endl;
+  }
+
+  
 }
 
 void obtenirDir() {
@@ -246,6 +324,7 @@ int mirarDir(AST *a) {
     return 3;
 }
 
+// Guarda els murs i el beepers del mapa
 void detectaWallsBeepers() {
   AST *llista = root->down->right->right->down;
   while ( llista != NULL ) {
@@ -277,12 +356,68 @@ void omplirDomini() {
    obtenirDir();
 }
 
-void testWalls() {
-  int x,y,ori;
-  x = 0;
-  y = 0;
-  ori = 3;
-  cout << "isClear("<< x <<", "<< y <<", "<< ori << ") "<< isClear(x,y,ori) << endl;
+void putbeeper() {
+  domini.beepers.push_back(i3tuple(domini.posx, domini.posy, 1));
+  cout << "================================================================================" << endl;
+  cout << "Acabo de posar un sensor a les coordenades (" << domini.posx << ", " << domini.posy << ")" << endl;
+  cout << "Sensors en el mapa: " << endl;
+  printWallsBeepers(domini.beepers);
+
+}
+
+void turnleft() {
+  if(domini.orient == DLEFT)
+    domini.orient = DDOWN;
+  else if(domini.orient == DRIGHT)
+    domini.orient = DUP;
+  else if(domini.orient == DUP)
+    domini.orient = DLEFT;
+  else 	// DDOWN
+    domini.orient = DRIGHT;
+    
+  cout << "================================================================================" << endl;
+  cout << "turnleft...direccio actual: " << nomDirs[domini.orient] << endl;
+}
+
+void main_karel() {
+  AST *a = root->down->right->right->right->down;
+  while(a != NULL) {
+    //cout << a->kind << endl;
+    if(a->kind == "iterate") {
+      int num = atoi(a->down->kind.c_str());	// numero de interacions
+      for(int i = 0; i < num; i++) {
+	AST *b = a->down->right->down;
+	while( b != NULL ) {
+	  if ( b->kind == "if") {
+	    // evalua if
+	    bool cond = avaluaCondicio(b->down);
+	    cout << "La condicio es: " << ((cond) ? "cert":"falsa") << endl;
+	    if(cond) {
+	      AST *c = b->down->right->down;
+	      while(c != NULL) {
+		if(c->kind == "move")
+		  move();
+		else if(c->kind == "putbeeper")
+		  putbeeper();
+		else if(c->kind == "turnleft")
+		  turnleft();
+		c = c->right;
+	      }
+	    }
+	  }
+	  b = b->right;
+	}
+      }
+    }
+    else if(a->kind == "id") {
+      cout << "Soc id amb contingut " << a->text << endl;
+    }
+    else if(a->kind == "turnoff") {
+      cout << "Sortint.." << endl;
+      break;
+    }
+    a = a->right;
+  }
 }
 
 void novaPosicio () {
@@ -290,7 +425,9 @@ void novaPosicio () {
   // ompliu el codi que falta aqui
   detectaWallsBeepers();
   
-
+  printValors();
+  
+  main_karel();
 }
 
 void printWallsBeepers(vector<i3tuple> v) {
@@ -301,6 +438,8 @@ void printWallsBeepers(vector<i3tuple> v) {
 
 void printValors() {
   cout << endl;
+  cout << "################################################################################" << endl;
+
   cout << "domini X: " << domini.gx << endl;
   cout << "domini Y: " << domini.gy << endl;
   
@@ -317,6 +456,8 @@ void printValors() {
   cout << endl;
   cout << "num beepers: " << domini.beepers.size() << endl;
   printWallsBeepers(domini.beepers);
+  cout << "################################################################################" << endl;
+
 }
 
 int main() {
@@ -324,8 +465,6 @@ int main() {
   ANTLR(karel(&root), stdin);
   ASTPrint(root);
   novaPosicio();
-  printValors();
-  testWalls();	// TREURE
 }
 >>
 
