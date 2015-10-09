@@ -419,7 +419,6 @@ void main_karel() {
       int num = atoi(a->down->kind.c_str());	// numero de interacions
       for(int i = 0; i < num; i++) {
         AST *b = a->down->right->down;
-        cout << "i: " << i << endl;
         while( b != NULL ) {
           if ( b->kind == "if") {
             // evalua if
@@ -441,6 +440,9 @@ void main_karel() {
           b = b->right;
         }
       }
+      a = a->right;
+      // SEGUIR PER AQUI (T1)
+      cout << "aa "<< a->kind <<" "<< a->text<< endl;
     }
     else if(a->kind == "id") {
       cout << "Soc id amb contingut " << a->text << endl;
