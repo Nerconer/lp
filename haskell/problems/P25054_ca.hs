@@ -1,16 +1,24 @@
-myLength::[Int] -> Int
+myLength :: [Int] -> Int
 myLength [] = 0
 myLength (x:xs) = 1 + myLength xs
 
-myMaximum::[Int] -> Int
+myMaximum :: [Int] -> Int
 myMaximum [x] = x
-myMaximum (x1: x2: xs)  
-	| x1 >= x2 = myMaximum (x1:xs)
-	| otherwise = myMaximum (x2:xs)
+myMaximum (x1: x2: xs) 
+ | x1 >= x2 = myMaximum (x1:xs)
+ | otherwise = myMaximum (x2:xs)
 
--- average::[Int] -> Float
--- average (x:xs) = 
---	let sum = fromIntegral $ x + (average xs); len = fromIntegral $ (myLength xs) + 1
---	in (fromIntegral sum) / (fromIntegral len)
+mySum :: [Int] -> Int
+mySum [x] = x
+mySum (x:xs) = 
+	x + mySum xs
+
+average :: [Int] -> Float
+average [] = error "Error: llista buida"
+average x = 
+ 	(fromIntegral $ mySum x) / (fromIntegral $ myLength x)
+
+buildPalindrome :: [Int] -> Int
+buildPalindrome
 
 
