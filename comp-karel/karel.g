@@ -172,7 +172,7 @@ bool avaluaCondicio(AST *a) {
   // ompliu el codi que falta aqui
   else if(a->kind == "foundBeeper") return foundBeeper();
   else if(a->kind == "isClear") return isClear();
- 
+  else if(a->kind == "anyBeepersInBag") return anyBeepersInBag();
 }
 
 bool dinsDominis(int x, int y) {
@@ -293,11 +293,10 @@ void move(){
   if(possible) {
     cout << "M'he mogut...posicio actual: (" << domini.posx << ", " << domini.posy << ")" << endl;
   }
-  else {
+  else {	// no ha estat possible moure's
     cout << "No m'he pogut moure :(" << endl;
+    cout << "================================================================================" << endl;
   }
-
-  
 }
 
 void obtenirDir() {
@@ -379,41 +378,69 @@ void turnleft() {
   cout << "turnleft...direccio actual: " << nomDirs[domini.orient] << endl;
 }
 
+void executaIforNot(AST* b);
+
+void executaInstr(AST* &c) {
+  while (c != NULL) {
+    if(c->kind == "move") {
+      move();
+    }
+    else if(c->kind == "putbeeper") {
+      putbeeper();
+    }
+    else if(c->kind == "turnleft") {
+      turnleft();
+    }
+    else if(c->kind == "id") {
+      AST *n = findDefinition(c->text);
+      executaIforNot(n->down);
+    }
+    c = c->right;
+  }
+}
+
+void executaIforNot(AST* b) {
+  while( b != NULL ) {
+    cout << "Estic executant:  " << b->kind << endl;
+    if ( b->kind == "if") {
+      // evalua if
+      bool cond = avaluaCondicio(b->down);
+      cout << "La condicio es: " << ((cond) ? "cert":"falsa") << endl;
+      if(cond) {
+	AST *c = b->down->right->down;
+	executaInstr(c);
+      }
+    }
+    else if ( b->kind == "move" or b->kind == "putbeeper" or b->kind == "turnleft") {
+      AST *temp = b;
+      executaInstr(temp);
+    }
+    else if ( b->kind == "id") {
+      AST *d = findDefinition(b->text);
+      while (d->right != NULL) d = d->right;
+      executaIforNot(d->down);
+    }
+    b = b->right;
+  }
+}
+
 void main_karel() {
   AST *a = root->down->right->right->right->down;
   while(a != NULL) {
-    //cout << a->kind << endl;
+    cout << endl;
+    cout << "------------------" << endl;
+    cout << "executo: " << a->kind << endl;
     if(a->kind == "iterate") {
       int num = atoi(a->down->kind.c_str());	// numero de interacions
       for(int i = 0; i < num; i++) {
 	AST *b = a->down->right->down;
-	while( b != NULL ) {
-	  if ( b->kind == "if") {
-	    // evalua if
-	    bool cond = avaluaCondicio(b->down);
-	    cout << "La condicio es: " << ((cond) ? "cert":"falsa") << endl;
-	    if(cond) {
-	      AST *c = b->down->right->down;
-	      while(c != NULL) {
-		if(c->kind == "move")
-		  move();
-		else if(c->kind == "putbeeper")
-		  putbeeper();
-		else if(c->kind == "turnleft")
-		  turnleft();
-		c = c->right;
-	      }
-	    }
-	  }
-	  b = b->right;
-	}
+	executaIforNot(b);
       }
-      a = a->right;
-      // SEGUIR PER AQUI (T1)
-      cout << "aa "<< a->kind <<" "<< a->text<< endl;
     }
     else if(a->kind == "id") {
       cout << "Soc id amb contingut " << a->text << endl;
+      AST *n = a;
+      executaIforNot(n);
     }
     else if(a->kind == "turnoff") {
       cout << "Sortint.." << endl;
@@ -421,6 +448,9 @@ void main_karel() {
     }
     a = a->right;
   }
+  cout << endl;
+  cout << "======================================" << endl;
+  cout << "Posicio final del robot: (" << domini.posx << ", " << domini.posy << ")" << endl;
 }
 
 void novaPosicio () {
@@ -520,11 +550,7 @@ int main() {
 
 
 
-//karel: dworld drobot definitions  <<#0=createASTlist(_sibling);>>;
-
 karel: dworld drobot definitions BEGIN! iter1 END! <<#0=createASTlist(_sibling);>>;
-
-
 
 
 dworld: WORLD^ NUM NUM;
@@ -553,9 +579,6 @@ defsWallsBeepers: WALLS^ LBRA! NUM NUM dir (COMMA! NUM NUM dir)* RBRA! | BEEPERS
 
 definitions: (defsWallsBeepers | functions)* <<#0=createASTlist(_sibling);>>;
 
-
-
-linstr: ;
 
 
 

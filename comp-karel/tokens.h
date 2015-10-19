@@ -123,12 +123,6 @@ void definitions(AST**_root);
 extern void definitions();
 #endif
 
-#ifdef __USE_PROTOS
-void linstr(AST**_root);
-#else
-extern void linstr();
-#endif
-
 #endif
 extern SetWordType zzerr1[];
 extern SetWordType zzerr2[];

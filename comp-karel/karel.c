@@ -204,7 +204,7 @@ bool avaluaCondicio(AST *a) {
   // ompliu el codi que falta aqui
   else if(a->kind == "foundBeeper") return foundBeeper();
   else if(a->kind == "isClear") return isClear();
-  
+  else if(a->kind == "anyBeepersInBag") return anyBeepersInBag();
 }
 
 bool dinsDominis(int x, int y) {
@@ -325,181 +325,211 @@ void move(){
   if(possible) {
     cout << "M'he mogut...posicio actual: (" << domini.posx << ", " << domini.posy << ")" << endl;
   }
-  else {
+  else {	// no ha estat possible moure's
     cout << "No m'he pogut moure :(" << endl;
+    cout << "================================================================================" << endl;
   }
-  
-  
 }
 
 void obtenirDir() {
-  string dir;
-  dir = root->down->right->down->right->right->right->kind.c_str();
-  if ( dir == "left" )
-  domini.orient = DLEFT;
-  if ( dir == "right" )
-  domini.orient = DRIGHT;
-  if ( dir == "up" ) 
-  domini.orient = DUP;
-  if ( dir == "down" )
-  domini.orient = DDOWN;   
+string dir;
+dir = root->down->right->down->right->right->right->kind.c_str();
+if ( dir == "left" )
+domini.orient = DLEFT;
+if ( dir == "right" )
+domini.orient = DRIGHT;
+if ( dir == "up" ) 
+domini.orient = DUP;
+if ( dir == "down" )
+domini.orient = DDOWN;   
 }
 
 int mirarDir(AST *a) {
-  if( a->kind == "left" )
-  return 0;
-  else if( a->kind == "right" )
-  return 1;
-  else if( a->kind == "up" )
-  return 2;
-  else // down
-  return 3;
+if( a->kind == "left" )
+return 0;
+else if( a->kind == "right" )
+return 1;
+else if( a->kind == "up" )
+return 2;
+else // down
+return 3;
 }
 
 // Guarda els murs i el beepers del mapa
 void detectaWallsBeepers() {
-  AST *llista = root->down->right->right->down;
-  while ( llista != NULL ) {
-    if(llista->kind == "walls") {
-      AST *walls = llista->down;
-      while( walls != NULL) {
-        int dir = mirarDir(walls->right->right);
-        // afageix un nou mur i avanca al seguent
-        domini.walls.push_back(i3tuple(atoi(walls->kind.c_str()),atoi(walls->right->kind.c_str()), dir));
-        walls = walls->right->right->right;
-      }
-    }
-    if(llista->kind == "beepers") {
-      AST *beepers = llista->down;
-      domini.beepers.push_back(i3tuple(atoi(beepers->kind.c_str()), atoi(beepers->right->kind.c_str()), atoi(beepers->right->right->kind.c_str())));
-    }
-    llista = llista->right;
-  }
+AST *llista = root->down->right->right->down;
+while ( llista != NULL ) {
+if(llista->kind == "walls") {
+AST *walls = llista->down;
+while( walls != NULL) {
+int dir = mirarDir(walls->right->right);
+// afageix un nou mur i avanca al seguent
+domini.walls.push_back(i3tuple(atoi(walls->kind.c_str()),atoi(walls->right->kind.c_str()), dir));
+walls = walls->right->right->right;
+}
+}
+if(llista->kind == "beepers") {
+AST *beepers = llista->down;
+domini.beepers.push_back(i3tuple(atoi(beepers->kind.c_str()), atoi(beepers->right->kind.c_str()), atoi(beepers->right->right->kind.c_str())));
+}
+llista = llista->right;
+}
 }
 
 void omplirDomini() { 
-  domini.gx = atoi(root->down->down->kind.c_str());
-  domini.gy = atoi(root->down->down->right->kind.c_str());
-  domini.posx = atoi(root->down->right->down->kind.c_str());
-  domini.posy = atoi(root->down->right->down->right->kind.c_str()); 
-  
+domini.gx = atoi(root->down->down->kind.c_str());
+domini.gy = atoi(root->down->down->right->kind.c_str());
+domini.posx = atoi(root->down->right->down->kind.c_str());
+domini.posy = atoi(root->down->right->down->right->kind.c_str()); 
+
    // ompliu el codi que falta aqui  
-  domini.nsens = atoi(root->down->right->down->right->right->kind.c_str());
-  obtenirDir();
+domini.nsens = atoi(root->down->right->down->right->right->kind.c_str());
+obtenirDir();
 }
 
 void putbeeper() {
-  domini.beepers.push_back(i3tuple(domini.posx, domini.posy, 1));
-  cout << "================================================================================" << endl;
-  cout << "Acabo de posar un sensor a les coordenades (" << domini.posx << ", " << domini.posy << ")" << endl;
-  cout << "Sensors en el mapa: " << endl;
-  printWallsBeepers(domini.beepers);
-  
+domini.beepers.push_back(i3tuple(domini.posx, domini.posy, 1));
+cout << "================================================================================" << endl;
+cout << "Acabo de posar un sensor a les coordenades (" << domini.posx << ", " << domini.posy << ")" << endl;
+cout << "Sensors en el mapa: " << endl;
+printWallsBeepers(domini.beepers);
+
 }
 
 void turnleft() {
-  if(domini.orient == DLEFT)
-  domini.orient = DDOWN;
-  else if(domini.orient == DRIGHT)
-  domini.orient = DUP;
-  else if(domini.orient == DUP)
-  domini.orient = DLEFT;
-  else 	// DDOWN
-  domini.orient = DRIGHT;
-  
+if(domini.orient == DLEFT)
+domini.orient = DDOWN;
+else if(domini.orient == DRIGHT)
+domini.orient = DUP;
+else if(domini.orient == DUP)
+domini.orient = DLEFT;
+else 	// DDOWN
+domini.orient = DRIGHT;
+
   cout << "================================================================================" << endl;
-  cout << "turnleft...direccio actual: " << nomDirs[domini.orient] << endl;
+cout << "turnleft...direccio actual: " << nomDirs[domini.orient] << endl;
+}
+
+void executaIforNot(AST* b);
+
+void executaInstr(AST* &c) {
+while (c != NULL) {
+if(c->kind == "move") {
+move();
+}
+else if(c->kind == "putbeeper") {
+putbeeper();
+}
+else if(c->kind == "turnleft") {
+turnleft();
+}
+else if(c->kind == "id") {
+AST *n = findDefinition(c->text);
+executaIforNot(n->down);
+}
+c = c->right;
+}
+}
+
+void executaIforNot(AST* b) {
+while( b != NULL ) {
+cout << "Estic executant:  " << b->kind << endl;
+if ( b->kind == "if") {
+// evalua if
+bool cond = avaluaCondicio(b->down);
+cout << "La condicio es: " << ((cond) ? "cert":"falsa") << endl;
+if(cond) {
+AST *c = b->down->right->down;
+executaInstr(c);
+}
+}
+else if ( b->kind == "move" or b->kind == "putbeeper" or b->kind == "turnleft") {
+AST *temp = b;
+executaInstr(temp);
+}
+else if ( b->kind == "id") {
+AST *d = findDefinition(b->text);
+while (d->right != NULL) d = d->right;
+executaIforNot(d->down);
+}
+b = b->right;
+}
 }
 
 void main_karel() {
-  AST *a = root->down->right->right->right->down;
-  while(a != NULL) {
-    //cout << a->kind << endl;
-    if(a->kind == "iterate") {
-      int num = atoi(a->down->kind.c_str());	// numero de interacions
-      for(int i = 0; i < num; i++) {
-        AST *b = a->down->right->down;
-        while( b != NULL ) {
-          if ( b->kind == "if") {
-            // evalua if
-            bool cond = avaluaCondicio(b->down);
-            cout << "La condicio es: " << ((cond) ? "cert":"falsa") << endl;
-            if(cond) {
-              AST *c = b->down->right->down;
-              while(c != NULL) {
-                if(c->kind == "move")
-                move();
-                else if(c->kind == "putbeeper")
-                putbeeper();
-                else if(c->kind == "turnleft")
-                turnleft();
-                c = c->right;
-              }
-            }
-          }
-          b = b->right;
-        }
-      }
-      a = a->right;
-      // SEGUIR PER AQUI (T1)
-      cout << "aa "<< a->kind <<" "<< a->text<< endl;
-    }
-    else if(a->kind == "id") {
-      cout << "Soc id amb contingut " << a->text << endl;
-    }
-    else if(a->kind == "turnoff") {
-      cout << "Sortint.." << endl;
-      break;
-    }
-    a = a->right;
-  }
+AST *a = root->down->right->right->right->down;
+while(a != NULL) {
+cout << endl;
+cout << "------------------" << endl;
+cout << "executo: " << a->kind << endl;
+if(a->kind == "iterate") {
+int num = atoi(a->down->kind.c_str());	// numero de interacions
+for(int i = 0; i < num; i++) {
+AST *b = a->down->right->down;
+executaIforNot(b);
+}
+}
+else if(a->kind == "id") {
+cout << "Soc id amb contingut " << a->text << endl;
+AST *n = a;
+executaIforNot(n);
+}
+else if(a->kind == "turnoff") {
+cout << "Sortint.." << endl;
+break;
+}
+a = a->right;
+}
+cout << endl;
+cout << "======================================" << endl;
+cout << "Posicio final del robot: (" << domini.posx << ", " << domini.posy << ")" << endl;
 }
 
 void novaPosicio () {
-  omplirDomini();
-  // ompliu el codi que falta aqui
-  detectaWallsBeepers();
-  
+omplirDomini();
+// ompliu el codi que falta aqui
+detectaWallsBeepers();
+
   printValors();
-  
+
   main_karel();
 }
 
 void printWallsBeepers(vector<i3tuple> v) {
-  for (const auto&i : v) {
-    cout << "[" << get<0>(i)  << " " << get<1>(i) << " " << get<2>(i) << "]" <<endl;
-  }
+for (const auto&i : v) {
+cout << "[" << get<0>(i)  << " " << get<1>(i) << " " << get<2>(i) << "]" <<endl;
+}
 }
 
 void printValors() {
-  cout << endl;
-  cout << "################################################################################" << endl;
-  
+cout << endl;
+cout << "################################################################################" << endl;
+
   cout << "domini X: " << domini.gx << endl;
-  cout << "domini Y: " << domini.gy << endl;
-  
+cout << "domini Y: " << domini.gy << endl;
+
   cout << endl;
-  cout << "pos actual robot (x,y): (" << domini.posx << ", " << domini.posy << ")" << endl;
-  
+cout << "pos actual robot (x,y): (" << domini.posx << ", " << domini.posy << ")" << endl;
+
   cout << "num sensors (total): " << domini.nsens << endl;
-  cout << "orientacio: " << domini.orient << " (0->left, 1->right, 2->up, 3->down)" << endl;
-  
+cout << "orientacio: " << domini.orient << " (0->left, 1->right, 2->up, 3->down)" << endl;
+
   cout << endl;
-  cout << "num walls: " << domini.walls.size() << endl;
-  printWallsBeepers(domini.walls);
-  
+cout << "num walls: " << domini.walls.size() << endl;
+printWallsBeepers(domini.walls);
+
   cout << endl;
-  cout << "num beepers: " << domini.beepers.size() << endl;
-  printWallsBeepers(domini.beepers);
-  cout << "################################################################################" << endl;
-  
+cout << "num beepers: " << domini.beepers.size() << endl;
+printWallsBeepers(domini.beepers);
+cout << "################################################################################" << endl;
+
 }
 
 int main() {
-  root = NULL;
-  ANTLR(karel(&root), stdin);
-  ASTPrint(root);
-  novaPosicio();
+root = NULL;
+ANTLR(karel(&root), stdin);
+ASTPrint(root);
+novaPosicio();
 }
 
 void
@@ -1037,26 +1067,5 @@ fail:
   zzEXIT(zztasp1);
   zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
   zzresynch(setwd3, 0x2);
-  }
-}
-
-void
-#ifdef __USE_PROTOS
-linstr(AST**_root)
-#else
-linstr(_root)
-AST **_root;
-#endif
-{
-  zzRULE;
-  zzBLOCK(zztasp1);
-  zzMake0;
-  {
-  zzEXIT(zztasp1);
-  return;
-fail:
-  zzEXIT(zztasp1);
-  zzsyn(zzMissText, zzBadTok, (ANTLRChar *)"", zzMissSet, zzMissTok, zzErrk, zzBadText);
-  zzresynch(setwd3, 0x4);
   }
 }
